@@ -113,6 +113,7 @@ def main(config: Path):
     model, tokenizer = prepare_model_artifacts(config)
     training_arguments = TrainingArguments(**config["training_arguments"])
 
+
     datasets = get_datasets(config)
     collator = get_collator(config, tokenizer)
     optimizer = get_optimizer(model, training_arguments.learning_rate, training_arguments.weight_decay)
@@ -123,7 +124,7 @@ def main(config: Path):
     
     callbacks = get_callbacks(config)
 
-
+    
     run = None
     if wandb_arguments := config.get("wandb_arguments", False):
         project = wandb_arguments["project"]
@@ -133,6 +134,7 @@ def main(config: Path):
             project=project, 
             job_type="training"
         )
+        run.config.update(config)
 
         artifact = wandb.Artifact(name="config_file", type="file")
         artifact.add_file(local_path=config_location)  # Add dataset directory to artifact
