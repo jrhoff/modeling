@@ -5,7 +5,7 @@ import peft
 class PeftHelper:
     def __init__(self, peft_arguments: Dict[str, Any]) -> None:
         self.peft_arguments = peft_arguments
-        self.config = self._construct_config(self.peft_arguments)
+        self.peft_config = self._construct_config(self.peft_arguments)
     
     @staticmethod
     def _construct_config(peft_arguments: Dict[str, Any]):
@@ -14,13 +14,8 @@ class PeftHelper:
             **peft_arguments["class_config"]["class_arguments"]
         )
     
-    @staticmethod
-    def _get_model(model, peft_config):
-        model = peft.get_peft_model(model, peft_config)
+    
+    def get_model(self, model):
+        model = peft.get_peft_model(model, self.peft_config)
         model.print_trainable_parameters()
         return model
-
-
-    def train():
-        
-        pass
