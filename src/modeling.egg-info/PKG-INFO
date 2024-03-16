@@ -11,3 +11,4 @@ Requires-Dist: lightning
 Requires-Dist: peft
 Requires-Dist: datasets
 Requires-Dist: lightning
+Requires-Dist: pyyaml

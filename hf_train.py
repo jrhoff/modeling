@@ -3,6 +3,7 @@ import os
 import wandb
 from typing import Dict, Any
 import torch
+import dotenv
 from pathlib import Path
 from argparse import ArgumentParser
 import transformers
@@ -90,7 +91,7 @@ def get_datasets(config: Dict[str, Any]):
 
     eval = None
     if eval_loc := data_arguments.get("eval_location", False):
-        with open(train_loc, "rb") as f:
+        with open(eval_loc, "rb") as f:
             eval = torch.load(f)
 
     return {
@@ -104,6 +105,7 @@ def calculate_warmup_steps(datasets: int, warmup_ratio: int):
 
 
 def main(config: Path):
+    dotenv.load_dotenv()
     with open(config, "r") as reader:
         config_location = config
         config = yaml.full_load(reader)
@@ -129,7 +131,12 @@ def main(config: Path):
     if wandb_arguments := config.get("wandb_arguments", False):
         project = wandb_arguments["project"]
         os.environ["WANDB_PROJECT"] = project
-        wandb.login(key = wandb_arguments["key"], relogin=False)
+
+
+        key = wandb_arguments.get("key", os.environ.get("WANDB_KEY", None))
+
+
+        wandb.login(key = key, relogin=False)
         run = wandb.init(
             project=project, 
             job_type="training"

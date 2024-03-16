@@ -3,3 +3,4 @@ lightning
 peft
 datasets
 lightning
+pyyaml
