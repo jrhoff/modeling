@@ -1,0 +1,13 @@
+Metadata-Version: 2.1
+Name: modeling
+Version: 0.0.0
+Summary: My modeling repository
+Home-page: https://github.com/jrhoff/modeling.git
+Classifier: Programming Language :: Python :: 3
+Classifier: Operating System :: OS Independent
+Description-Content-Type: text/markdown
+Requires-Dist: transformers>=4.34.1
+Requires-Dist: lightning
+Requires-Dist: peft
+Requires-Dist: datasets
+Requires-Dist: lightning
