@@ -95,7 +95,7 @@ def get_datasets(config: Dict[str, Any]):
 
     return {
         "train": train,
-        "eval": eval[:10]
+        "eval": eval
     }
 
 def calculate_warmup_steps(datasets: int, warmup_ratio: int):
