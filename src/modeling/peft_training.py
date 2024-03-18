@@ -15,7 +15,10 @@ class PeftHelper:
         )
     
     
-    def get_model(self, model):
+    def get_model(self, model, prepare_for_kbit: bool = False):
         model = peft.get_peft_model(model, self.peft_config)
         model.print_trainable_parameters()
+        if prepare_for_kbit:
+            print("Preparing for kbit")
+            model = peft.preapre_model_for_kbit_training(model)
         return model

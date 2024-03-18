@@ -1,13 +1,13 @@
 import yaml
 import os
 import wandb
-from typing import Dict, Any
+from typing import Dict, Any, Optional
 import torch
 import dotenv
 from pathlib import Path
 from argparse import ArgumentParser
 import transformers
-from transformers import Trainer, AutoTokenizer, TrainingArguments
+from transformers import Trainer, AutoTokenizer, TrainingArguments, BitsAndBytesConfig
 from modeling.peft_training import PeftHelper
 from modeling import collators
 
@@ -16,9 +16,9 @@ from modeling import collators
 
 os.environ["WANDB_LOG_MODEL"] = "checkpoint"  # log all model checkpoints
 
-def load_model_and_tokenizer(model_name_or_path:str, base_class: str):
+def load_model_and_tokenizer(model_name_or_path:str, base_class: str, quantization_config: Optional[BitsAndBytesConfig] = None):
     model_class = getattr(transformers, base_class)
-    model = model_class.from_pretrained(model_name_or_path)
+    model = model_class.from_pretrained(model_name_or_path, quantization_config=quantization_config)
     tokenizer = AutoTokenizer.from_pretrained(model_name_or_path)
     return model, tokenizer
 
@@ -67,16 +67,22 @@ def set_environment_variables(config):
 def prepare_model_artifacts(config: Dict[str, Any]):
     model_arguments = config["model_arguments"]
 
+    quantization_config = None
+    if quantization_arguments := model_arguments.get("quantization_arguments", None) is not None:
+        quantization_config = BitsAndBytesConfig(**quantization_arguments)
+
     # load base model
     model_name_or_path = model_arguments["model_name_or_path"]
     base_class = model_arguments["base_class"]
 
-    model, tokenizer = load_model_and_tokenizer(model_name_or_path, base_class)
+    model, tokenizer = load_model_and_tokenizer(model_name_or_path, base_class, quantization_config)
 
     # need to handle peft?
     if peft_arguments := config.get("peft_arguments", False):
         peft_helper = PeftHelper(peft_arguments)
-        model = peft_helper.get_model(model)
+        prepare_for_kbit = quantization_config is not None
+
+        model = peft_helper.get_model(model, prepare_for_kbit)
     return model, tokenizer
 
 
@@ -94,6 +100,9 @@ def get_datasets(config: Dict[str, Any]):
         with open(eval_loc, "rb") as f:
             eval = torch.load(f)
 
+    if max_eval_examples:= data_arguments.get("max_eval_examples", None) is not None:
+        eval = eval[:int(max_eval_examples)]
+
     return {
         "train": train,
         "eval": eval
@@ -110,11 +119,15 @@ def main(config: Path):
         config_location = config
         config = yaml.full_load(reader)
     
+
     modeling_sanity_checks()  # validate args
 
     model, tokenizer = prepare_model_artifacts(config)
+
     training_arguments = TrainingArguments(**config["training_arguments"])
 
+    if training_arguments.bf16:
+        torch.set_float32_matmul_precision("medium")
 
     datasets = get_datasets(config)
     collator = get_collator(config, tokenizer)
@@ -136,7 +149,7 @@ def main(config: Path):
         key = wandb_arguments.get("key", os.environ.get("WANDB_KEY", None))
 
 
-        wandb.login(key = key, relogin=False)
+        wandb.login(key = key)
         run = wandb.init(
             project=project, 
             job_type="training"
