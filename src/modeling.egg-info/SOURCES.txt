@@ -3,6 +3,7 @@ setup.cfg
 setup.py
 src/modeling/__init__.py
 src/modeling/arguments.py
+src/modeling/callbacks.py
 src/modeling/collators.py
 src/modeling/data.py
 src/modeling/peft_training.py

@@ -6,7 +6,7 @@ Home-page: https://github.com/jrhoff/modeling.git
 Classifier: Programming Language :: Python :: 3
 Classifier: Operating System :: OS Independent
 Description-Content-Type: text/markdown
-Requires-Dist: transformers>=4.34.1
+Requires-Dist: transformers
 Requires-Dist: lightning
 Requires-Dist: peft
 Requires-Dist: datasets
