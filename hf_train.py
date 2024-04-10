@@ -26,6 +26,9 @@ def load_model_and_tokenizer(model_name_or_path:str, base_class: str, quantizati
     model_class = getattr(transformers, base_class)
     model = model_class.from_pretrained(model_name_or_path, quantization_config=quantization_config, device_map="auto")
     tokenizer = AutoTokenizer.from_pretrained(model_name_or_path)
+    if tokenizer.pad_token is None:
+        tokenizer.add_special_tokens({'pad_token': '[PAD]'})
+        model.resize_token_embeddings(len(tokenizer))
     return model, tokenizer
 
 
